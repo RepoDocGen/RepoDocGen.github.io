@@ -25,7 +25,9 @@ jobs:
           - name: install Dependencies
             run: npm ci 
           - name: Build Project
-            run: npm run build  
+            run: npm run build 
+            env:
+              VITE_BACKEND_API: ${{ secrets.VITE_BACKEND_API }}
           - name: Upload Dist Artifact
             uses: actions/upload-pages-artifact@v3
             with:
