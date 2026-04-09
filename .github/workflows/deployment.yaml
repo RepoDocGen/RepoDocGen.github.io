@@ -11,7 +11,7 @@ jobs:
       
         runs-on: ubuntu-latest   
         steps:
-          - name: Get Code
+          - name: get Code
             uses: actions/checkout@v4
           - name: Install Node 20
             uses: actions/setup-node@v4
