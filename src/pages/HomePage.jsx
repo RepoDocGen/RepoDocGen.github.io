@@ -26,7 +26,7 @@ export default function HomePage({ onDocsGenerated }) {
       onDocsGenerated(data);
       const owner = data.meta?.fullName?.split('/')[0] || 'unknown';
       const repo = data.meta?.fullName?.split('/')[1] || 'unknown';
-      navigate(`/#/${owner}/${repo}`);
+      navigate(`/${owner}/${repo}`);
     } catch (err) {
       setError(err.message || 'Failed to generate documentation');
       setLoading(false);
