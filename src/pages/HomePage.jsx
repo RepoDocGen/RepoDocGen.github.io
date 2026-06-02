@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { generateDocs } from '../utils/api';
+import { generateDocs, parseGitHubUrl, checkDocsExist } from '../utils/api';
 import LoadingState from '../components/LoadingState';
 
 export default function HomePage({ onDocsGenerated }) {
@@ -9,12 +9,33 @@ export default function HomePage({ onDocsGenerated }) {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(null);
   const [error, setError] = useState('');
+  const [existsInfo, setExistsInfo] = useState(null);
+  const [checking, setChecking] = useState(false);
 
-  const handleGenerate = async (e) => {
+  const handleCheck = async (e) => {
     e.preventDefault();
     setError('');
-    if (!repoUrl.trim()) { setError('Please enter a GitHub repository URL'); return; }
+    setExistsInfo(null);
+    if (!repoUrl.trim()) { setError('Enter a GitHub repository URL'); return; }
 
+    const parsed = parseGitHubUrl(repoUrl.trim());
+    if (!parsed) { setError('Invalid GitHub URL format'); return; }
+
+    setChecking(true);
+    try {
+      const exists = await checkDocsExist(parsed.owner, parsed.repo);
+      if (exists) {
+        setExistsInfo(parsed);
+      } else {
+        startGeneration();
+      }
+    } catch {
+      startGeneration();
+    }
+    setChecking(false);
+  };
+
+  const startGeneration = async () => {
     setLoading(true);
     setProgress({ phase: 'starting', message: 'Initializing...', progress: 0 });
 
@@ -34,59 +55,123 @@ export default function HomePage({ onDocsGenerated }) {
     }
   };
 
+  const handleViewExisting = () => {
+    if (existsInfo) {
+      navigate(`/${existsInfo.owner}/${existsInfo.repo}`);
+    }
+  };
+
+  const handleGenerateNew = () => {
+    setExistsInfo(null);
+    startGeneration();
+  };
+
   if (loading) return <LoadingState progress={progress} />;
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#fff' }}>
+    <div className="scanline-overlay" style={{
+      minHeight: '100vh', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', padding: 24,
+    }}>
 
       {/* Header */}
-      <div className="fade-in-up" style={{ textAlign: 'center', marginBottom: 44, maxWidth: 520 }}>
-        {/* Logo */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 52, height: 52, borderRadius: 12, background: '#111827', marginBottom: 24 }}>
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="16" y1="13" x2="8" y2="13" />
-            <line x1="16" y1="17" x2="8" y2="17" />
-          </svg>
+      <div className="fade-in-up" style={{ textAlign: 'center', marginBottom: 40, maxWidth: 500 }}>
+        <div style={{
+          fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)',
+          marginBottom: 16, letterSpacing: '0.12em', textTransform: 'uppercase',
+        }}>
+          {'> system.ready'}
         </div>
 
-        <h1 style={{ fontSize: 'clamp(32px, 5vw, 44px)', fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: 14, color: '#111827' }}>
-          RepoDocGen
+        <h1 style={{
+          fontSize: 'clamp(28px, 5vw, 40px)', fontWeight: 700,
+          letterSpacing: '0.08em', lineHeight: 1.2, marginBottom: 10,
+          textTransform: 'uppercase',
+        }}>
+          RepoDocGen<span className="cursor" />
         </h1>
-        <p style={{ fontSize: 16, color: '#6b7280', lineHeight: 1.7 }}>
-          Transform any GitHub repository into clean, readable documentation — powered by AI.
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.7, letterSpacing: '0.02em' }}>
+          Generate documentation for any GitHub repository.
         </p>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleGenerate} className="fade-in-up fade-in-up-delay-1" style={{
-        width: '100%', maxWidth: 460, padding: 28,
-        border: '1px solid #e5e7eb', borderRadius: 14, background: '#fff',
+      <form onSubmit={handleCheck} className="fade-in-up fade-in-up-delay-1" style={{
+        width: '100%', maxWidth: 440, padding: 24,
+        border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
+        background: 'var(--bg-card)',
       }}>
-        <div style={{ marginBottom: 20 }}>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 8 }}>
-            Repository URL
-          </label>
-          <input id="repo-url-input" type="text" className="input-field"
-            placeholder="https://github.com/owner/repo"
-            value={repoUrl} onChange={(e) => setRepoUrl(e.target.value)}
-            style={{ fontFamily: 'var(--font-mono)', fontSize: 14 }}
-          />
-        </div>
+        <label style={{
+          display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+          marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.1em',
+        }}>
+          Repository URL
+        </label>
+        <input
+          id="repo-url-input"
+          type="text"
+          className="input-field"
+          placeholder="github.com/owner/repo"
+          value={repoUrl}
+          onChange={(e) => setRepoUrl(e.target.value)}
+        />
 
         {error && (
-          <div style={{ padding: '10px 14px', borderRadius: 8, marginBottom: 16, background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 14 }}>
-            {error}
+          <div style={{
+            padding: '10px 14px', marginTop: 12,
+            border: '1px solid var(--danger)', borderRadius: 'var(--radius-sm)',
+            background: 'rgba(255,68,68,0.06)', color: 'var(--danger)',
+            fontSize: 12, fontFamily: 'var(--font-mono)',
+          }}>
+            {'> '}{error}
           </div>
         )}
 
-        <button id="generate-btn" type="submit" className="btn-primary" style={{ width: '100%', height: 48 }}>
-          Generate Documentation →
-        </button>
+        {/* Exists Prompt */}
+        {existsInfo && (
+          <div className="exists-prompt" style={{ marginTop: 16 }}>
+            <h3>Documentation Found</h3>
+            <p>
+              /{existsInfo.owner}/{existsInfo.repo}
+            </p>
+            <div className="btn-group">
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={handleViewExisting}
+                style={{ flex: 1 }}
+              >
+                View Docs
+              </button>
+              <button
+                type="button"
+                className="btn-danger"
+                onClick={handleGenerateNew}
+                style={{ flex: 1 }}
+              >
+                Generate New
+              </button>
+            </div>
+          </div>
+        )}
+
+        {!existsInfo && (
+          <button
+            id="generate-btn"
+            type="submit"
+            className="btn-primary"
+            style={{ width: '100%', marginTop: 16, height: 44 }}
+            disabled={checking}
+          >
+            {checking ? 'Checking...' : 'Generate Documentation'}
+          </button>
+        )}
       </form>
 
-      <p className="fade-in-up fade-in-up-delay-2" style={{ marginTop: 36, fontSize: 12, color: '#d1d5db', textAlign: 'center' }}>
+      <p className="fade-in-up fade-in-up-delay-2" style={{
+        marginTop: 32, fontSize: 11, color: 'var(--text-muted)',
+        textAlign: 'center', letterSpacing: '0.06em', textTransform: 'uppercase',
+      }}>
         Works with any public GitHub repository
       </p>
     </div>

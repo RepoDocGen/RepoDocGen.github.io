@@ -96,3 +96,30 @@ export async function fetchCachedDocs(owner, repo) {
 
   return json.data;
 }
+
+/**
+ * Parse a GitHub URL and extract owner/repo
+ */
+export function parseGitHubUrl(url) {
+  const patterns = [
+    /github\.com\/([^\/]+)\/([^\/\?#]+)/,
+    /^([^\/]+)\/([^\/\?#]+)$/,
+  ];
+  for (const pat of patterns) {
+    const m = url.match(pat);
+    if (m) return { owner: m[1], repo: m[2].replace(/\.git$/, '') };
+  }
+  return null;
+}
+
+/**
+ * Check if documentation already exists for a repo
+ */
+export async function checkDocsExist(owner, repo) {
+  try {
+    const data = await fetchCachedDocs(owner, repo);
+    return !!data;
+  } catch {
+    return false;
+  }
+}
