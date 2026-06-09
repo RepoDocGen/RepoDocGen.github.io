@@ -12,6 +12,8 @@ export default function HomePage({ onDocsGenerated }) {
   const [existsInfo, setExistsInfo] = useState(null);
   const [checking, setChecking] = useState(false);
 
+  const [docSize, setDocSize] = useState('medium');
+
   const handleCheck = async (e) => {
     e.preventDefault();
     setError('');
@@ -35,13 +37,13 @@ export default function HomePage({ onDocsGenerated }) {
     setChecking(false);
   };
 
-  const startGeneration = async () => {
+  const startGeneration = async (force = false) => {
     setLoading(true);
     setProgress({ phase: 'starting', message: 'Initializing...', progress: 0 });
 
     try {
       const data = await generateDocs(
-        { repoUrl: repoUrl.trim() },
+        { repoUrl: repoUrl.trim(), force, docSize },
         (p) => setProgress(p)
       );
       onDocsGenerated(data);
@@ -63,7 +65,7 @@ export default function HomePage({ onDocsGenerated }) {
 
   const handleGenerateNew = () => {
     setExistsInfo(null);
-    startGeneration();
+    startGeneration(true);
   };
 
   if (loading) return <LoadingState progress={progress} />;
@@ -74,7 +76,6 @@ export default function HomePage({ onDocsGenerated }) {
       alignItems: 'center', justifyContent: 'center', padding: 24,
     }}>
 
-      {/* Header */}
       <div className="fade-in-up" style={{ textAlign: 'center', marginBottom: 40, maxWidth: 500 }}>
         <div style={{
           fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)',
@@ -83,19 +84,14 @@ export default function HomePage({ onDocsGenerated }) {
           {'> system.ready'}
         </div>
 
-        <h1 style={{
-          fontSize: 'clamp(28px, 5vw, 40px)', fontWeight: 700,
-          letterSpacing: '0.08em', lineHeight: 1.2, marginBottom: 10,
-          textTransform: 'uppercase',
-        }}>
+        <h1 className="homepage-title">
           RepoDocGen<span className="cursor" />
         </h1>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.7, letterSpacing: '0.02em' }}>
+        <p className="homepage-subtitle">
           Generate documentation for any GitHub repository.
         </p>
       </div>
 
-      {/* Form */}
       <form onSubmit={handleCheck} className="fade-in-up fade-in-up-delay-1" style={{
         width: '100%', maxWidth: 440, padding: 24,
         border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
@@ -116,18 +112,49 @@ export default function HomePage({ onDocsGenerated }) {
           onChange={(e) => setRepoUrl(e.target.value)}
         />
 
+        {/* Doc Size Selector */}
+        <div style={{ marginTop: 14 }}>
+          <label style={{
+            display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+            marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.1em',
+          }}>
+            Documentation Size
+          </label>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {['small', 'medium', 'detailed'].map(size => (
+              <button
+                key={size}
+                type="button"
+                onClick={() => setDocSize(size)}
+                style={{
+                  flex: 1, padding: '8px 10px', cursor: 'pointer',
+                  fontFamily: 'var(--font-mono)', fontSize: 10,
+                  textTransform: 'uppercase', letterSpacing: '0.06em',
+                  background: docSize === size ? 'var(--accent)' : 'var(--bg-card)',
+                  color: docSize === size ? '#fff' : 'var(--text-secondary)',
+                  border: docSize === size ? '1px solid var(--accent)' : '1px solid var(--border)',
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={(e) => { if (docSize !== size) { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)'; }}}
+                onMouseLeave={(e) => { if (docSize !== size) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}}
+              >
+                {size === 'small' ? 'Compact' : size === 'medium' ? 'Standard' : 'Detailed'}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {error && (
           <div style={{
             padding: '10px 14px', marginTop: 12,
             border: '1px solid var(--danger)', borderRadius: 'var(--radius-sm)',
-            background: 'rgba(255,68,68,0.06)', color: 'var(--danger)',
+            background: 'rgba(211,47,47,0.04)', color: 'var(--danger)',
             fontSize: 12, fontFamily: 'var(--font-mono)',
           }}>
             {'> '}{error}
           </div>
         )}
 
-        {/* Exists Prompt */}
         {existsInfo && (
           <div className="exists-prompt" style={{ marginTop: 16 }}>
             <h3>Documentation Found</h3>

@@ -17,6 +17,7 @@ export default function DocsPage({ docsData, setDocsData }) {
   const [activeSection, setActiveSection] = useState('overview');
   const [loading, setLoading] = useState(!docsData);
   const [error, setError] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (docsData) { setLoading(false); return; }
@@ -39,6 +40,20 @@ export default function DocsPage({ docsData, setDocsData }) {
     SECTIONS.forEach(({ id }) => { const el = document.getElementById(id); if (el) observer.observe(el); });
     return () => observer.disconnect();
   }, [loading, error, docsData]);
+
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [sidebarOpen]);
+
+  const scrollTo = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setSidebarOpen(false);
+  };
 
   if (loading) return (
     <div className="scanline-overlay" style={{
@@ -70,29 +85,44 @@ export default function DocsPage({ docsData, setDocsData }) {
   );
 
   const { meta, sections } = docsData;
-  const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }} className="scanline-overlay">
+
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)',
+            zIndex: 60, display: isMobile ? 'block' : 'none',
+          }}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="hidden-mobile" style={{
-        position: 'fixed', top: 0, left: 0, width: 220, height: '100vh',
-        borderRight: '1px solid var(--border)', padding: '20px 0',
-        background: 'var(--bg-secondary)', zIndex: 50, overflowY: 'auto',
+      <aside style={{
+        position: 'fixed', top: 0, left: 0,
+        width: 240, height: '100vh',
+        borderRight: '1px solid var(--border)',
+        background: 'var(--bg-card)',
+        zIndex: 70,
+        overflowY: 'auto',
         display: 'flex', flexDirection: 'column',
+        transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'none',
+        transition: 'transform 0.25s ease',
       }}>
-        <div style={{ padding: '0 16px', marginBottom: 24 }}>
+        <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid var(--border)' }}>
           <button onClick={() => navigate('/')} style={{
             background: 'none', border: 'none', cursor: 'pointer',
-            fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)',
+            fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)',
             display: 'flex', alignItems: 'center', gap: 6, textTransform: 'uppercase',
-            letterSpacing: '0.08em',
+            letterSpacing: '0.08em', marginBottom: 16,
           }}>
             {'<-'} RepoDocGen
           </button>
-        </div>
 
-        <div style={{ padding: '0 16px', marginBottom: 24 }}>
           <p style={{
             fontSize: 10, color: 'var(--text-muted)', marginBottom: 2,
             textTransform: 'uppercase', letterSpacing: '0.1em',
@@ -108,7 +138,7 @@ export default function DocsPage({ docsData, setDocsData }) {
           </div>
         </div>
 
-        <nav style={{ flex: 1, padding: '0 8px' }}>
+        <nav style={{ flex: 1, padding: '8px' }}>
           {SECTIONS.map(({ id, label }) => (
             <button key={id} onClick={() => scrollTo(id)}
               className={`sidebar-link ${activeSection === id ? 'active' : ''}`}
@@ -136,21 +166,41 @@ export default function DocsPage({ docsData, setDocsData }) {
       </aside>
 
       {/* Main Content */}
-      <main style={{ marginLeft: 220, flex: 1, width: 'calc(100% - 220px)' }}>
+      <main style={{
+        marginLeft: 240,
+        flex: 1,
+        width: 'calc(100% - 240px)',
+        minWidth: 0,
+      }}>
         <header style={{
-          position: 'sticky', top: 0, zIndex: 40,
-          background: 'rgba(10,10,10,0.9)', backdropFilter: 'blur(8px)',
+          position: 'sticky', top: 0, zIndex: 50,
+          background: 'rgba(250,250,250,0.9)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
           borderBottom: '1px solid var(--border)',
-          padding: '0 24px', height: 48,
+          padding: '0 16px 0 20px', height: 48,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              style={{
+                display: 'none', background: 'none', border: '1px solid var(--border)',
+                cursor: 'pointer', padding: '4px 6px', color: 'var(--text-secondary)',
+                flexShrink: 0,
+              }}
+              className="mobile-menu-btn"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 6h18M3 12h18M3 18h18" />
+              </svg>
+            </button>
             <span style={{
               fontSize: 12, fontWeight: 700, color: 'var(--text-primary)',
               fontFamily: 'var(--font-mono)', textTransform: 'uppercase',
-              letterSpacing: '0.06em',
+              letterSpacing: '0.06em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>{meta?.name || repo}</span>
-            {meta?.language && <span className="badge" style={{ fontSize: 10, padding: '2px 6px' }}>{meta.language}</span>}
+            {meta?.language && <span className="badge" style={{ fontSize: 10, padding: '2px 6px', flexShrink: 0 }}>{meta.language}</span>}
           </div>
           {meta?.githubUrl && (
             <a href={meta.githubUrl} target="_blank" rel="noopener noreferrer"
@@ -160,13 +210,13 @@ export default function DocsPage({ docsData, setDocsData }) {
                 background: 'transparent', color: 'var(--text-secondary)',
                 textDecoration: 'none', fontSize: 11, fontFamily: 'var(--font-mono)',
                 textTransform: 'uppercase', letterSpacing: '0.06em',
-                transition: 'all 0.15s',
+                transition: 'all 0.15s', flexShrink: 0,
               }}
               onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
             >
               <GithubIcon size={12} />
-              Source
+              <span className="github-label">Source</span>
             </a>
           )}
         </header>
@@ -196,8 +246,10 @@ export default function DocsPage({ docsData, setDocsData }) {
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
         @media (max-width: 768px) {
-          .hidden-mobile { display: none !important; }
+          .mobile-menu-btn { display: inline-flex !important; }
+          .github-label { display: none; }
           main { margin-left: 0 !important; width: 100% !important; }
         }
       `}</style>
@@ -225,7 +277,7 @@ function SectionImgs({ images, section }) {
     <div style={{ marginTop: 24 }}>
       {filtered.map((img, i) => (
         <figure key={i} style={{ marginBottom: 18 }}>
-          <img src={img.url} alt={img.alt || ''} style={{ maxWidth: '100%', border: '1px solid var(--border)' }} />
+          <img src={img.url} alt={img.alt || ''} style={{ maxWidth: '100%', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }} />
           {img.caption && <figcaption style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8, textAlign: 'center', fontFamily: 'var(--font-mono)' }}>{img.caption}</figcaption>}
         </figure>
       ))}
@@ -314,7 +366,7 @@ function FeaturesSection({ features, images }) {
               fontFamily: 'var(--font-mono)', textTransform: 'uppercase',
               letterSpacing: '0.06em',
             }}>{f.title}</strong>
-            <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 0 }}>{f.description}</p>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.8, marginBottom: 0 }}>{f.description}</p>
           </div>
         ))}
       </div>
@@ -355,7 +407,7 @@ function ArchitectureSection({ architecture, images }) {
                 <div style={{
                   minWidth: 24, height: 24, display: 'flex', alignItems: 'center',
                   justifyContent: 'center', fontSize: 10, fontWeight: 700,
-                  color: 'var(--bg-primary)', background: 'var(--accent)',
+                  color: '#fff', background: 'var(--accent)',
                   fontFamily: 'var(--font-mono)', flexShrink: 0,
                 }}>{i + 1}</div>
                 <div>
@@ -363,7 +415,7 @@ function ArchitectureSection({ architecture, images }) {
                     <strong style={{ fontSize: 13, fontFamily: 'var(--font-mono)' }}>{c.name}</strong>
                     {c.techStack && <span style={{ fontSize: 10, padding: '2px 6px', border: '1px solid var(--border)', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>{c.techStack}</span>}
                   </div>
-                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7 }}>{c.description}</p>
+                  <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.8 }}>{c.description}</p>
                 </div>
               </div>
             ))}
@@ -394,7 +446,7 @@ function HowItWorksSection({ howItWorks, images }) {
               fontFamily: 'var(--font-mono)', textTransform: 'uppercase',
               letterSpacing: '0.04em',
             }}>{step.title}</strong>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 12, lineHeight: 1.7 }}>{step.description}</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.8 }}>{step.description}</p>
           </div>
         ))}
       </div>
@@ -434,14 +486,14 @@ function CodeSection({ code, images }) {
               }}>{file.complexity}</span>
             )}
           </div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 12, lineHeight: 1.7, marginBottom: 10 }}>{file.purpose}</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>{file.purpose}</p>
 
           {file.keyFunctions?.length > 0 && (
             <div style={{ paddingLeft: 14, borderLeft: '1px dashed var(--border)' }}>
               {file.keyFunctions.map((fn, j) => (
                 <div key={j} style={{ marginBottom: 10 }}>
                   <code style={{ fontSize: 12, fontWeight: 700 }}>{fn.name}</code>
-                  <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.6 }}>{fn.description}</p>
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2, lineHeight: 1.7 }}>{fn.description}</p>
                 </div>
               ))}
             </div>
@@ -484,14 +536,14 @@ function SetupSection({ setup, images }) {
               <div style={{
                 minWidth: 22, height: 22, display: 'flex', alignItems: 'center',
                 justifyContent: 'center', fontSize: 10, fontWeight: 700,
-                color: 'var(--bg-primary)', background: 'var(--accent)',
+                color: '#fff', background: 'var(--accent)',
                 fontFamily: 'var(--font-mono)', flexShrink: 0, marginTop: 2,
               }}>
                 {step.step || i + 1}
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 4, fontFamily: 'var(--font-mono)' }}>{step.title}</p>
-                {step.description && <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.6 }}>{step.description}</p>}
+                {step.description && <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.8 }}>{step.description}</p>}
                 {step.command && (
                   <div style={{ position: 'relative' }}>
                     <pre className="code-block" style={{ paddingRight: 52 }}>
@@ -526,28 +578,30 @@ function SetupSection({ setup, images }) {
             fontFamily: 'var(--font-mono)',
           }}>Environment Variables</h3>
           <div className="retro-card" style={{ overflow: 'hidden', padding: 0 }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  <th style={{ padding: '10px 14px', fontWeight: 700, fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }}>Variable</th>
-                  <th style={{ padding: '10px 14px', fontWeight: 700, fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }}>Description</th>
-                  <th style={{ padding: '10px 14px', fontWeight: 700, fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center', width: 80 }}>Required</th>
-                </tr>
-              </thead>
-              <tbody>
-                {setup.envVars.map((v, i) => (
-                  <tr key={i} style={{ borderBottom: i < setup.envVars.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                    <td style={{ padding: '10px 14px' }}><code>{v.name}</code></td>
-                    <td style={{ padding: '10px 14px', color: 'var(--text-secondary)' }}>{v.description}</td>
-                    <td style={{ padding: '10px 14px', textAlign: 'center' }}>
-                      {v.required
-                        ? <span style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 10, fontFamily: 'var(--font-mono)' }}>REQ</span>
-                        : <span style={{ color: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' }}>OPT</span>}
-                    </td>
+            <div style={{ width: '100%', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: 300 }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                    <th style={{ padding: '10px 14px', fontWeight: 700, fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }}>Variable</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 700, fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'left' }}>Description</th>
+                    <th style={{ padding: '10px 14px', fontWeight: 700, fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center', width: 80 }}>Required</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {setup.envVars.map((v, i) => (
+                    <tr key={i} style={{ borderBottom: i < setup.envVars.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                      <td style={{ padding: '10px 14px' }}><code>{v.name}</code></td>
+                      <td style={{ padding: '10px 14px', color: 'var(--text-secondary)' }}>{v.description}</td>
+                      <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                        {v.required
+                          ? <span style={{ color: 'var(--danger)', fontWeight: 700, fontSize: 10, fontFamily: 'var(--font-mono)' }}>REQ</span>
+                          : <span style={{ color: 'var(--text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' }}>OPT</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

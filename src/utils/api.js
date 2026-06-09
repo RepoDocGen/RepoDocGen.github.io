@@ -10,11 +10,11 @@ const API_BASE = import.meta.env.VITE_BACKEND_API;
  * @param {Function} onProgress - Called with progress updates
  * @returns {Promise<Object>} The final documentation data
  */
-export async function generateDocs({ repoUrl }, onProgress) {
+export async function generateDocs({ repoUrl, force, docSize }, onProgress) {
   const response = await fetch(`${API_BASE}/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ repoUrl }),
+    body: JSON.stringify({ repoUrl, force, docSize }),
   });
 
   // If it's a regular JSON response (cached result)
