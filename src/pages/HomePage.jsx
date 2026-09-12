@@ -1,9 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generateDocs, parseGitHubUrl, checkDocsExist } from '../utils/api';
+import { setSEO } from '../utils/seo';
 import LoadingState from '../components/LoadingState';
 
 export default function HomePage({ onDocsGenerated }) {
+  useEffect(() => {
+    setSEO(
+      'RepoDocGen — AI Documentation Generator for GitHub Repositories',
+      'Turn any GitHub repository into a beautiful documentation website using AI. Setup guides, architecture docs, and code explanations in seconds. Free for public repos.'
+    );
+  }, []);
   const navigate = useNavigate();
   const [repoUrl, setRepoUrl] = useState('');
   const [loading, setLoading] = useState(false);
