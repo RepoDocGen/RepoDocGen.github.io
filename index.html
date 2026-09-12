@@ -3,12 +3,79 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="RepoDocGen — Transform any GitHub repository into a beautiful documentation website using AI." />
+
+    <!-- Primary SEO -->
+    <title>RepoDocGen — AI Documentation Generator for GitHub Repositories</title>
+    <meta name="description" content="RepoDocGen turns any GitHub repository into a beautiful documentation website using AI. Paste a repo URL, get setup guides, architecture docs, and code explanations in seconds. Free for public repos." />
+    <meta name="keywords" content="GitHub documentation generator, AI documentation, repo docs, automatic documentation, README generator, GitHub repo docs, docs from code, AI developer tool" />
+    <meta name="author" content="RepoDocGen" />
+    <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#fafafa" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="canonical" href="https://RepoDocGen.github.io/" />
+
+    <!-- Open Graph (Facebook / Google / LinkedIn) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="RepoDocGen" />
+    <meta property="og:title" content="RepoDocGen — AI Documentation Generator for GitHub Repositories" />
+    <meta property="og:description" content="Turn any GitHub repository into beautiful documentation automatically with AI. Setup guides, architecture overviews, and code explanations in seconds." />
+    <meta property="og:url" content="https://RepoDocGen.github.io/" />
+    <meta property="og:image" content="https://RepoDocGen.github.io/og-image.png" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="RepoDocGen — AI Documentation Generator for GitHub Repositories" />
+    <meta name="twitter:description" content="Paste a GitHub repo URL, get beautiful documentation in seconds — setup guides, architecture, and code explanations, powered by AI." />
+    <meta name="twitter:image" content="https://RepoDocGen.github.io/og-image.png" />
+
+    <!-- Structured data for rich results -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "RepoDocGen",
+      "url": "https://RepoDocGen.github.io/",
+      "description": "AI documentation generator that turns any GitHub repository into a beautiful documentation website.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "category": "Free for public repositories"
+      },
+      "featureList": [
+        "Automatic documentation generation",
+        "Setup guides and architecture overviews",
+        "AI-powered code explanations",
+        "Live streaming generation",
+        "GitHub repository support"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "RepoDocGen",
+      "url": "https://RepoDocGen.github.io/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://RepoDocGen.github.io/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- Performance: preconnect to fonts & Vite assets -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <title>RepoDocGen</title>
+
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   </head>
   <body>
     <div id="root"></div>
